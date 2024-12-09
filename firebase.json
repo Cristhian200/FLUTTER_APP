@@ -1,0 +1,39 @@
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "reservas-1132b",
+          "appId": "1:815524268500:android:d883ea5f0eb7aa3c69ee41",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "reservas-1132b",
+          "configurations": {
+            "android": "1:815524268500:android:d883ea5f0eb7aa3c69ee41",
+            "ios": "1:815524268500:ios:e9ce6577d123b30f69ee41",
+            "macos": "1:815524268500:ios:e9ce6577d123b30f69ee41",
+            "web": "1:815524268500:web:5a7a45ddd41d125969ee41",
+            "windows": "1:815524268500:web:52b13235a39862f869ee41"
+          }
+        }
+      }
+    }
+  },
+  "hosting": {
+    "public": "web",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
+  }
+}

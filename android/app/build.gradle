@@ -1,0 +1,63 @@
+plugins {
+    id "com.android.application"
+    id "kotlin-android"
+    id "dev.flutter.flutter-gradle-plugin"
+    id("com.google.gms.google-services") version "4.3.15" apply true
+}
+
+apply plugin: 'com.google.gms.google-services'
+
+
+android {
+    namespace = "com.example.proyectoreservasihc"
+    compileSdk = flutter.compileSdkVersion // Usa el valor configurado en Flutter.
+
+    defaultConfig {
+        // ID único de tu aplicación.
+        applicationId = "com.example.proyectoreservasihc"
+
+        // Especificar las versiones mínimas y objetivo.
+        minSdkVersion 23                                                                                                                     
+        targetSdkVersion = flutter.targetSdkVersion
+
+        // Versiones de la aplicación.
+        versionCode = flutter.versionCode
+        versionName = flutter.versionName
+    }
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+
+    kotlinOptions {
+        jvmTarget = "17"
+    }
+
+    buildTypes {
+        release {
+            // Configuración de firma para la versión release.
+            signingConfig = signingConfigs.debug
+            // Habilitar ProGuard si necesitas ofuscar el código.
+            // minifyEnabled true
+            // proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+dependencies {
+    // Importar el BoM de Firebase.
+    implementation platform("com.google.firebase:firebase-bom:33.6.0")
+
+    // Agregar dependencias de Firebase que necesites.
+    implementation "com.google.firebase:firebase-auth"
+
+    // Si usas Firestore.
+    implementation "com.google.firebase:firebase-firestore"
+
+    // Dependencias adicionales si son necesarias.
+    implementation "androidx.core:core-ktx:1.12.0"
+}
+flutter {
+    source = "../.."
+}

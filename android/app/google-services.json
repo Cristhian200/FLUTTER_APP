@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "815524268500",
+    "project_id": "reservas-1132b",
+    "storage_bucket": "reservas-1132b.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:815524268500:android:d883ea5f0eb7aa3c69ee41",
+        "android_client_info": {
+          "package_name": "com.example.proyectoreservasihc"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBH1tyBCgC4ojnYIFif6fvmZOPnzdR60Bw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
