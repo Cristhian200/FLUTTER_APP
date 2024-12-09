@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 class MisReservasPage extends StatefulWidget {
+  const MisReservasPage({super.key});
+
   @override
   _MisReservasPageState createState() => _MisReservasPageState();
 }
@@ -16,10 +18,10 @@ class _MisReservasPageState extends State<MisReservasPage> {
     if (user == null) {
       return Scaffold(
         appBar: AppBar(
-          title: Text('Mis Reservas'),
+          title: const Text('Mis Reservas'),
           centerTitle: true,
         ),
-        body: Center(
+        body: const Center(
           child: Text('Debes iniciar sesión para ver tus reservas.'),
         ),
       );
@@ -27,7 +29,7 @@ class _MisReservasPageState extends State<MisReservasPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Mis Reservas'),
+        title: const Text('Mis Reservas'),
         centerTitle: true,
       ),
       body: StreamBuilder<QuerySnapshot>(
@@ -40,12 +42,12 @@ class _MisReservasPageState extends State<MisReservasPage> {
         builder: (context, snapshot) {
           // Si los datos están cargando, muestra un indicador de carga
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator());
           }
 
           // Si no hay datos o la consulta no devuelve resultados, muestra un mensaje
           if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            return Center(child: Text('No tienes reservas.'));
+            return const Center(child: Text('No tienes reservas.'));
           }
 
           // Extrae las reservas del snapshot de Firestore
@@ -106,7 +108,7 @@ class _MisReservasPageState extends State<MisReservasPage> {
   void _editarReserva(BuildContext context, String reservaId) {
     if (reservaId.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('ID de reserva inválido.')),
+        const SnackBar(content: Text('ID de reserva inválido.')),
       );
       return;
     }
@@ -192,12 +194,12 @@ class _MisReservasPageState extends State<MisReservasPage> {
 
       // Mostrar mensaje de éxito
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Reserva cancelada y horario liberado.')),
+        const SnackBar(content: Text('Reserva cancelada y horario liberado.')),
       );
     } catch (e) {
       print('Error al cancelar la reserva: $e');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('No se pudo cancelar la reserva.')),
+        const SnackBar(content: Text('No se pudo cancelar la reserva.')),
       );
     }
   }
@@ -218,12 +220,12 @@ class _MisReservasPageState extends State<MisReservasPage> {
           // Para manejar el estado dentro del diálogo.
           builder: (context, setState) {
             return AlertDialog(
-              title: Text('Calificar Reserva'),
+              title: const Text('Calificar Reserva'),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text('Por favor, califica la reserva'),
-                  SizedBox(height: 10),
+                  const Text('Por favor, califica la reserva'),
+                  const SizedBox(height: 10),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: List.generate(5, (index) {
@@ -244,10 +246,10 @@ class _MisReservasPageState extends State<MisReservasPage> {
                       );
                     }),
                   ),
-                  SizedBox(height: 10),
+                  const SizedBox(height: 10),
                   TextField(
                     controller: comentarioController,
-                    decoration: InputDecoration(
+                    decoration: const InputDecoration(
                       labelText: 'Deja un comentario',
                       hintText: 'Escribe aquí tu comentario...',
                       border: OutlineInputBorder(),
@@ -261,7 +263,7 @@ class _MisReservasPageState extends State<MisReservasPage> {
                   onPressed: () {
                     Navigator.pop(context);
                   },
-                  child: Text('Cancelar'),
+                  child: const Text('Cancelar'),
                 ),
                 TextButton(
                   onPressed: () async {
@@ -277,11 +279,11 @@ class _MisReservasPageState extends State<MisReservasPage> {
                     });
 
                     // Mostrar mensaje de éxito.
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                         content: Text('Reserva calificada y comentada!')));
                     Navigator.pop(context);
                   },
-                  child: Text('Calificar'),
+                  child: const Text('Calificar'),
                 ),
               ],
             );
@@ -295,7 +297,7 @@ class _MisReservasPageState extends State<MisReservasPage> {
 class EditReservationPage extends StatefulWidget {
   final String reservationId;
 
-  EditReservationPage({required this.reservationId});
+  const EditReservationPage({super.key, required this.reservationId});
 
   @override
   _EditReservationPageState createState() => _EditReservationPageState();
@@ -308,7 +310,7 @@ class _EditReservationPageState extends State<EditReservationPage> {
   String? _piso;
   String? _aula;
   String? _oldHorario;
-  List<String> _horariosDisponibles = []; // Lista de horarios disponibles
+  final List<String> _horariosDisponibles = []; // Lista de horarios disponibles
   String? _selectedHorario; // Horario seleccionado
 
   // Mapeo de aulas a pisos
@@ -369,7 +371,7 @@ class _EditReservationPageState extends State<EditReservationPage> {
 
       if (newHorario.isEmpty || !_isValidHorario(newHorario)) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          const SnackBar(
               content: Text(
                   'Por favor ingresa un horario válido (formato: 10:00 - 11:00).')),
         );
@@ -401,7 +403,7 @@ class _EditReservationPageState extends State<EditReservationPage> {
       if (horarios.containsKey(newHorario) &&
           horarios[newHorario] == "Ocupado") {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('El horario seleccionado ya está ocupado.')),
+          const SnackBar(content: Text('El horario seleccionado ya está ocupado.')),
         );
         return;
       }
@@ -420,7 +422,7 @@ class _EditReservationPageState extends State<EditReservationPage> {
 
       // Notificar éxito
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Reserva actualizada con éxito.')),
+        const SnackBar(content: Text('Reserva actualizada con éxito.')),
       );
 
       // Regresar a la página anterior
@@ -428,7 +430,7 @@ class _EditReservationPageState extends State<EditReservationPage> {
     } catch (e) {
       print('Error al actualizar la reserva: $e');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('No se pudo actualizar la reserva.')),
+        const SnackBar(content: Text('No se pudo actualizar la reserva.')),
       );
     }
   }
@@ -436,9 +438,9 @@ class _EditReservationPageState extends State<EditReservationPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Editar Reserva')),
+      appBar: AppBar(title: const Text('Editar Reserva')),
       body: _aula == null || _oldHorario == null || _piso == null
-          ? Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator())
           : Padding(
               padding: const EdgeInsets.all(16.0),
               child: Column(
@@ -446,21 +448,21 @@ class _EditReservationPageState extends State<EditReservationPage> {
                 children: [
                   Text(
                     'Editar horario para el $_aula en el  $_piso',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
-                  SizedBox(height: 20),
+                  const SizedBox(height: 20),
                   TextField(
                     controller: _horarioController,
-                    decoration: InputDecoration(
+                    decoration: const InputDecoration(
                       labelText: 'Nuevo horario',
                       hintText: 'Ejemplo: 10:00 - 11:00',
                       border: OutlineInputBorder(),
                     ),
                   ),
-                  SizedBox(height: 20),
+                  const SizedBox(height: 20),
                   ElevatedButton(
                     onPressed: _updateReservation,
-                    child: Text('Actualizar Horario'),
+                    child: const Text('Actualizar Horario'),
                   ),
                 ],
               ),

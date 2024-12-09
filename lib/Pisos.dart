@@ -4,11 +4,16 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'Aulas.dart'; // Firestore
 
 class PisosPage extends StatelessWidget {
+  final DateTime selectedDate;
+
+  // Constructor para recibir la fecha seleccionada
+  const PisosPage({super.key, required this.selectedDate});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(
+        title: const Text(
           'Seleccionar Piso',
           style: TextStyle(color: Colors.white),
         ),
@@ -18,7 +23,7 @@ class PisosPage extends StatelessWidget {
         future: FirebaseFirestore.instance.collection('pisos').get(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator());
           }
 
           if (snapshot.hasError) {
@@ -36,17 +41,17 @@ class PisosPage extends StatelessWidget {
           }
 
           return ListView.builder(
-            padding: EdgeInsets.all(8),
+            padding: const EdgeInsets.all(8),
             itemCount: pisos.length,
             itemBuilder: (context, index) {
               final piso = pisos[index];
               final pisoNombre = piso['nombre'];
 
               return Card(
-                margin: EdgeInsets.symmetric(vertical: 8),
+                margin: const EdgeInsets.symmetric(vertical: 8),
                 elevation: 5,
                 child: ListTile(
-                  contentPadding: EdgeInsets.all(16),
+                  contentPadding: const EdgeInsets.all(16),
                   title: Text(
                     pisoNombre,
                     style: TextStyle(
@@ -57,10 +62,14 @@ class PisosPage extends StatelessWidget {
                   trailing:
                       Icon(Icons.arrow_forward_ios, color: Colors.blue[900]),
                   onTap: () {
+                    // Navegar a AulasPage pasando pisoId y selectedDate
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => AulasPage(pisoId: piso.id),
+                        builder: (context) => AulasPage(
+                          pisoId: piso.id,
+                          selectedDate: selectedDate,
+                        ),
                       ),
                     );
                   },

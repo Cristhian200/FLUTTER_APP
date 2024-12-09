@@ -5,13 +5,15 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'AdminPage.dart';
 
 class LoginPage extends StatefulWidget {
+  const LoginPage({super.key});
+
   @override
   _LoginPageState createState() => _LoginPageState();
 }
 
 class _LoginPageState extends State<LoginPage> {
-  TextEditingController _usernameController = TextEditingController();
-  TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
   String _errorMessage = '';
   bool _isPasswordVisible = false;
 
@@ -19,7 +21,6 @@ class _LoginPageState extends State<LoginPage> {
     String username = _usernameController.text.trim();
     String password = _passwordController.text;
 
-    // Validaciones locales para la contraseña
     if (password.length < 8) {
       setState(() {
         _errorMessage = 'La contraseña debe tener al menos 8 caracteres.';
@@ -44,13 +45,11 @@ class _LoginPageState extends State<LoginPage> {
     }
 
     try {
-      // Autenticación con Firebase
       UserCredential userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: username + "@domain.com", // Concatenar usuario con dominio ficticio
+        email: "$username@domain.com",
         password: password,
       );
 
-      // Verifica el tipo de usuario
       SharedPreferences prefs = await SharedPreferences.getInstance();
       if (userCredential.user != null) {
         if (userCredential.user!.email == 'admin@domain.com') {
@@ -63,7 +62,7 @@ class _LoginPageState extends State<LoginPage> {
           prefs.setString('role', 'docente');
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (context) => CalendarWithReservationsPage(reservaId: '',)),
+            MaterialPageRoute(builder: (context) => CalendarWithReservationsPage(reservaId: '')),
           );
         }
       }
@@ -78,7 +77,7 @@ class _LoginPageState extends State<LoginPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.blue[900],
-      resizeToAvoidBottomInset: true, // Solución para evitar overflow
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(
         backgroundColor: Colors.blue[900],
         elevation: 0,
@@ -89,116 +88,121 @@ class _LoginPageState extends State<LoginPage> {
           },
         ),
       ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom, // Ajusta según el teclado
-          ),
-          child: Center(
-            child: Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Card(
-                elevation: 5,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          return SingleChildScrollView(
+            child: Center(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxWidth: 600, // Ajuste para pantallas grandes (tablets/desktops)
+                  minWidth: constraints.maxWidth * 0.8, // Mantener margen
                 ),
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 40),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: <Widget>[
-                      Column(
-                        children: [
-                          Text(
-                            'RESERVATEC',
-                            style: TextStyle(
-                              fontSize: 30,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.blue[900],
+                  padding: const EdgeInsets.all(20.0),
+                  child: Card(
+                    elevation: 5,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 40),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: <Widget>[
+                          Column(
+                            children: [
+                              Text(
+                                'RESERVATEC',
+                                style: TextStyle(
+                                  fontSize: constraints.maxWidth > 600 ? 35 : 30,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.blue[900],
+                                ),
+                              ),
+                              const SizedBox(height: 5),
+                              Text(
+                                'Tu aula, el encuentro',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontStyle: FontStyle.italic,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                              const SizedBox(height: 20),
+                              Image.asset(
+                                'lib/pictures/logo.png',
+                                height: constraints.maxWidth > 600 ? 120 : 100,
+                                fit: BoxFit.contain,
+                              ),
+                              const SizedBox(height: 20),
+                            ],
+                          ),
+                          TextField(
+                            controller: _usernameController,
+                            decoration: InputDecoration(
+                              labelText: 'Nombre',
+                              prefixIcon: const Icon(Icons.email),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
                             ),
                           ),
-                          const SizedBox(height: 5),
-                          Text(
-                            'Tu aula, el encuentro',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontStyle: FontStyle.italic,
-                              color: Colors.grey[600],
+                          const SizedBox(height: 15),
+                          TextField(
+                            controller: _passwordController,
+                            obscureText: !_isPasswordVisible,
+                            decoration: InputDecoration(
+                              labelText: 'Contraseña',
+                              prefixIcon: const Icon(Icons.lock),
+                              suffixIcon: IconButton(
+                                icon: Icon(
+                                  _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                                ),
+                                onPressed: () {
+                                  setState(() {
+                                    _isPasswordVisible = !_isPasswordVisible;
+                                  });
+                                },
+                              ),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
                             ),
                           ),
                           const SizedBox(height: 20),
-                          Image.asset(
-                            'lib/pictures/logo.png',
-                            height: 100,
-                            fit: BoxFit.contain,
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.blue[900],
+                              padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                            onPressed: _login,
+                            child: const Text(
+                              'Iniciar Sesión',
+                              style: TextStyle(
+                                fontSize: 18,
+                                color: Colors.white,
+                              ),
+                            ),
                           ),
-                          const SizedBox(height: 20),
+                          const SizedBox(height: 10),
+                          if (_errorMessage.isNotEmpty)
+                            Text(
+                              _errorMessage,
+                              style: const TextStyle(color: Colors.red),
+                              textAlign: TextAlign.center,
+                            ),
                         ],
                       ),
-                      TextField(
-                        controller: _usernameController,
-                        decoration: InputDecoration(
-                          labelText: 'Nombre',
-                          prefixIcon: const Icon(Icons.email),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 15),
-                      TextField(
-                        controller: _passwordController,
-                        obscureText: !_isPasswordVisible,
-                        decoration: InputDecoration(
-                          labelText: 'Contraseña',
-                          prefixIcon: const Icon(Icons.lock),
-                          suffixIcon: IconButton(
-                            icon: Icon(
-                              _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
-                            ),
-                            onPressed: () {
-                              setState(() {
-                                _isPasswordVisible = !_isPasswordVisible;
-                              });
-                            },
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.blue[900],
-                          padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                        onPressed: _login,
-                        child: const Text(
-                        'Iniciar Sesión',
-                        style: TextStyle(
-                          fontSize: 18,
-                          color: Colors.white,  // Cambia el color de la letra a blanco
-                        ),
-                      ),
-                      ),
-                      const SizedBox(height: 10),
-                      if (_errorMessage.isNotEmpty)
-                        Text(
-                          _errorMessage,
-                          style: const TextStyle(color: Color.fromARGB(255, 18, 19, 19)),
-                          textAlign: TextAlign.center,
-                        ),
-                    ],
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
-        ),
+          );
+        },
       ),
     );
   }

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 class AboutPage extends StatefulWidget {
+  const AboutPage({super.key});
+
   @override
   _AboutPageState createState() => _AboutPageState();
 }
@@ -18,7 +20,7 @@ class _AboutPageState extends State<AboutPage>
     // Configurar controlador de animaciones
     _controller = AnimationController(
       vsync: this,
-      duration: Duration(seconds: 2),
+      duration: const Duration(seconds: 2),
     );
 
     // Configurar animaciones
@@ -27,7 +29,7 @@ class _AboutPageState extends State<AboutPage>
     );
 
     _slideAnimation =
-        Tween<Offset>(begin: Offset(0, 0.3), end: Offset(0, 0)).animate(
+        Tween<Offset>(begin: const Offset(0, 0.3), end: const Offset(0, 0)).animate(
       CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
     );
 
@@ -45,7 +47,7 @@ class _AboutPageState extends State<AboutPage>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Acerca de Nosotros'),
+        title: const Text('Acerca de Nosotros'),
         backgroundColor: Colors.blue[900],
         centerTitle: true,
       ),
@@ -60,15 +62,15 @@ class _AboutPageState extends State<AboutPage>
                 position: _slideAnimation,
                 child: Container(
                   width: double.infinity,
-                  padding: EdgeInsets.all(20),
+                  padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
                     color: Colors.blue[900],
-                    borderRadius: BorderRadius.only(
+                    borderRadius: const BorderRadius.only(
                       bottomLeft: Radius.circular(30),
                       bottomRight: Radius.circular(30),
                     ),
                   ),
-                  child: Column(
+                  child: const Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
@@ -91,7 +93,7 @@ class _AboutPageState extends State<AboutPage>
                   ),
                 ),
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
 
               // Sección de contenido principal
               Padding(
@@ -104,9 +106,9 @@ class _AboutPageState extends State<AboutPage>
                       content:
                           'Somos un equipo dedicado a la innovación y al desarrollo de herramientas tecnológicas que impactan positivamente en las comunidades.',
                     ),
-                    SizedBox(height: 20),
+                    const SizedBox(height: 20),
                     Divider(color: Colors.blue[900], thickness: 2),
-                    SizedBox(height: 20),
+                    const SizedBox(height: 20),
                     _buildAnimatedSection(
                       title: 'Nuestro Propósito',
                       content:
@@ -119,13 +121,13 @@ class _AboutPageState extends State<AboutPage>
               // Sección de valores destacados con animación de aparición
               Container(
                 color: Colors.blue[900],
-                padding: EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+                padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
                 child: FadeTransition(
                   opacity: _fadeAnimation,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      Text(
+                      const Text(
                         'Nuestros Valores',
                         style: TextStyle(
                           color: Colors.white,
@@ -133,7 +135,7 @@ class _AboutPageState extends State<AboutPage>
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      SizedBox(height: 10),
+                      const SizedBox(height: 10),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
                         children: [
@@ -169,10 +171,10 @@ class _AboutPageState extends State<AboutPage>
               fontWeight: FontWeight.bold,
             ),
           ),
-          SizedBox(height: 10),
+          const SizedBox(height: 10),
           Text(
             content,
-            style: TextStyle(
+            style: const TextStyle(
               color: Colors.black87,
               fontSize: 16,
             ),
@@ -195,10 +197,10 @@ class _AboutPageState extends State<AboutPage>
             color: Colors.blue[900],
           ),
         ),
-        SizedBox(height: 10),
+        const SizedBox(height: 10),
         Text(
           title,
-          style: TextStyle(
+          style: const TextStyle(
             color: Colors.white,
             fontSize: 16,
           ),

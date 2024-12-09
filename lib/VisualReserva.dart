@@ -10,7 +10,7 @@ import 'Pisos.dart'; // Página de Pisos
 class CalendarWithReservationsPage extends StatefulWidget {
   final String reservaId;
 
-  CalendarWithReservationsPage({required this.reservaId});
+  const CalendarWithReservationsPage({super.key, required this.reservaId});
 
   @override
   _CalendarWithReservationsPageState createState() =>
@@ -22,14 +22,11 @@ class _CalendarWithReservationsPageState
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
   Map<DateTime, List<Map<String, String>>> _reservations = {};
-  String _reservationDetails = 'Selecciona una fecha para ver los detalles';
   DateTime? _lastTappedDate;
-  final _doubleTapThreshold = Duration(milliseconds: 300);
+  final _doubleTapThreshold = const Duration(milliseconds: 300);
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
   String _profileImage = 'lib/pictures/default.png';
-  String _reservationHorario =
-      'No hay horario disponible'; // Definir la variable
 
   @override
   void initState() {
@@ -55,7 +52,9 @@ class _CalendarWithReservationsPageState
           setState(() {
             _profileImage = genero == 'hombre'
                 ? 'lib/pictures/hombre.png'
-                : 'lib/pictures/mujer.png';
+                : (genero == 'mujer'
+                    ? 'lib/pictures/mujer.png'
+                    : 'lib/pictures/default.png');
           });
         }
       } catch (e) {
@@ -126,68 +125,25 @@ class _CalendarWithReservationsPageState
         _lastTappedDate =
             selectedDay; // Actualizar la última fecha seleccionada
       });
-      _getReservationDetails(selectedDay); // Obtener detalles de la reserva
-    }
-  }
-
-  // Obtener los detalles de la reserva para una fecha
-  void _getReservationDetails(DateTime selectedDate) {
-    List<Map<String, String>>? dayReservations = _reservations[selectedDate];
-
-    if (dayReservations == null || dayReservations.isEmpty) {
-      setState(() {
-        _reservationDetails = 'No hay reservas para esta fecha';
-      });
-    } else {
-      setState(() {
-        _reservationDetails =
-            'Reservas para ${selectedDate.toLocal().toString().split(' ')[0]}';
-      });
     }
   }
 
   // Navegar a la página de Pisos
   void _navigateToPisosPage() {
+    if (_selectedDay == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('Por favor selecciona una fecha antes de continuar')),
+      );
+      return;
+    }
+
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => PisosPage()),
-    );
-  }
-
-  // Construir el widget de detalles de las reservas
-  Widget _buildReservationDetails(DateTime? selectedDay) {
-    if (selectedDay == null) return Text('');
-
-    List<Map<String, String>>? dayReservations = _reservations[selectedDay];
-
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            '',
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-          ),
-          SizedBox(height: 10),
-          if (dayReservations == null || dayReservations.isEmpty) Text(''),
-          if (dayReservations != null && dayReservations.isNotEmpty)
-            ...dayReservations.map((reservation) {
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 12.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Detalles: ${reservation['detalles']}'),
-                    Text('Piso: ${reservation['piso']}'),
-                    Text('Aula: ${reservation['aula']}'),
-                    Text('Horario: ${reservation['horario']}'),
-                    SizedBox(height: 10),
-                  ],
-                ),
-              );
-            }).toList(),
-        ],
+      MaterialPageRoute(
+        builder: (context) => PisosPage(
+          selectedDate: _selectedDay!,
+        ),
       ),
     );
   }
@@ -198,7 +154,7 @@ class _CalendarWithReservationsPageState
       child: Column(
         children: [
           UserAccountsDrawerHeader(
-            accountName: Text('Usuario'),
+            accountName: const Text('Usuario'),
             accountEmail: Text(_auth.currentUser?.email ?? ''),
             currentAccountPicture: CircleAvatar(
               backgroundImage: AssetImage(_profileImage), // Imagen de perfil
@@ -207,7 +163,7 @@ class _CalendarWithReservationsPageState
           ),
           ListTile(
             leading: Icon(Icons.bookmark, color: Colors.blue[900]),
-            title: Text('Mis Reservas'),
+            title: const Text('Mis Reservas'),
             onTap: () {
               Navigator.push(
                 context,
@@ -219,7 +175,7 @@ class _CalendarWithReservationsPageState
           ),
           ListTile(
             leading: Icon(Icons.info, color: Colors.blue[900]),
-            title: Text('About'),
+            title: const Text('About'),
             onTap: () {
               Navigator.push(
                 context,
@@ -229,8 +185,8 @@ class _CalendarWithReservationsPageState
             },
           ),
           ListTile(
-            leading: Icon(Icons.exit_to_app, color: Colors.red),
-            title: Text('Cerrar Sesión'),
+            leading: const Icon(Icons.exit_to_app, color: Colors.red),
+            title: const Text('Cerrar Sesión'),
             onTap: () {
               _auth.signOut(); // Cerrar sesión
               Navigator.pushReplacement(
@@ -249,7 +205,7 @@ class _CalendarWithReservationsPageState
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Calendario de Reservas'),
+        title: const Text('Calendario de Reservas'),
         centerTitle: true,
       ),
       drawer: _buildDrawer(), // Añadir el Drawer al Scaffold
@@ -267,7 +223,7 @@ class _CalendarWithReservationsPageState
                   CalendarFormat.month, // Se mantiene solo en formato mensual
               availableGestures:
                   AvailableGestures.all, // Habilita gestos de deslizamiento
-              headerStyle: HeaderStyle(
+              headerStyle: const HeaderStyle(
                 formatButtonVisible:
                     false, // Quita el botón de formato de "2 weeks"
                 titleCentered: true, // Centra el título del mes/año
@@ -288,7 +244,7 @@ class _CalendarWithReservationsPageState
               calendarBuilders: CalendarBuilders(
                 markerBuilder: (context, date, events) {
                   if (_reservations.containsKey(date)) {
-                    return Positioned(
+                    return const Positioned(
                       bottom: 1,
                       right: 1,
                       child: Icon(
@@ -298,11 +254,11 @@ class _CalendarWithReservationsPageState
                       ),
                     );
                   }
-                  return SizedBox();
+                  return const SizedBox();
                 },
               ),
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
             // Mensaje bajo el calendario
             Text(
               'Por favor haz doble tap en la fecha que deseas. Como recordatorio, no debe ser la misma de hoy.',
@@ -313,8 +269,7 @@ class _CalendarWithReservationsPageState
               ),
               textAlign: TextAlign.center,
             ),
-            SizedBox(height: 20),
-            _buildReservationDetails(_selectedDay),
+            const SizedBox(height: 20),
           ],
         ),
       ),
