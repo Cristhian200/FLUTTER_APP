@@ -19,6 +19,8 @@ class _LoginPageState extends State<LoginPage> {
 
   Future<void> _login() async {
     String username = _usernameController.text.trim();
+    username = "$username@domain.com"; // Agregar automáticamente el dominio.
+
     String password = _passwordController.text;
 
     if (password.length < 8) {
@@ -28,7 +30,8 @@ class _LoginPageState extends State<LoginPage> {
       return;
     }
 
-    final passwordRegex = RegExp(r'^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$');
+    final passwordRegex = RegExp(
+        r'^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$');
     if (!passwordRegex.hasMatch(password)) {
       setState(() {
         _errorMessage =
@@ -45,31 +48,44 @@ class _LoginPageState extends State<LoginPage> {
     }
 
     try {
-      UserCredential userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: "$username@domain.com",
+      // Manejo especial para credenciales de administrador.
+      if (username == 'admincris@domain.com' && password == 'Admincris@1') {
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        prefs.setString('role', 'admin');
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const AdminPage()),
+        );
+        return; // Salir del método después de redirigir al admin.
+      }
+
+      // Intentar inicio de sesión para otros usuarios.
+      UserCredential userCredential =
+          await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: username,
         password: password,
       );
 
       SharedPreferences prefs = await SharedPreferences.getInstance();
       if (userCredential.user != null) {
-        if (userCredential.user!.email == 'admin@domain.com') {
-          prefs.setString('role', 'admin');
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => AdminPage()),
-          );
-        } else {
-          prefs.setString('role', 'docente');
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => CalendarWithReservationsPage(reservaId: '')),
-          );
-        }
+        prefs.setString('role', 'docente');
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) =>
+                const CalendarWithReservationsPage(reservaId: ''),
+          ),
+        );
       }
     } on FirebaseAuthException catch (e) {
-      setState(() {
-        _errorMessage = e.message ?? 'Usuario o contraseña incorrectos.';
-      });
+      if (e.code == 'user-not-found') {
+        _errorMessage = 'Usuario no encontrado.';
+      } else if (e.code == 'wrong-password') {
+        _errorMessage = 'Contraseña incorrecta.';
+      } else {
+        _errorMessage =
+            'Las credenciales proporcionadas son incorrectas.';
+      }
     }
   }
 
@@ -94,7 +110,8 @@ class _LoginPageState extends State<LoginPage> {
             child: Center(
               child: ConstrainedBox(
                 constraints: BoxConstraints(
-                  maxWidth: 600, // Ajuste para pantallas grandes (tablets/desktops)
+                  maxWidth:
+                      600, // Ajuste para pantallas grandes (tablets/desktops)
                   minWidth: constraints.maxWidth * 0.8, // Mantener margen
                 ),
                 child: Padding(
@@ -105,7 +122,8 @@ class _LoginPageState extends State<LoginPage> {
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 40),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 30, vertical: 40),
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: <Widget>[
@@ -114,7 +132,8 @@ class _LoginPageState extends State<LoginPage> {
                               Text(
                                 'RESERVATEC',
                                 style: TextStyle(
-                                  fontSize: constraints.maxWidth > 600 ? 35 : 30,
+                                  fontSize:
+                                      constraints.maxWidth > 600 ? 35 : 30,
                                   fontWeight: FontWeight.bold,
                                   color: Colors.blue[900],
                                 ),
@@ -156,7 +175,9 @@ class _LoginPageState extends State<LoginPage> {
                               prefixIcon: const Icon(Icons.lock),
                               suffixIcon: IconButton(
                                 icon: Icon(
-                                  _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                                  _isPasswordVisible
+                                      ? Icons.visibility
+                                      : Icons.visibility_off,
                                 ),
                                 onPressed: () {
                                   setState(() {
@@ -173,7 +194,8 @@ class _LoginPageState extends State<LoginPage> {
                           ElevatedButton(
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.blue[900],
-                              padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 30, vertical: 15),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(10),
                               ),
@@ -191,7 +213,7 @@ class _LoginPageState extends State<LoginPage> {
                           if (_errorMessage.isNotEmpty)
                             Text(
                               _errorMessage,
-                              style: const TextStyle(color: Colors.red),
+                              style: const TextStyle(color: Color.fromARGB(255, 19, 18, 18)),
                               textAlign: TextAlign.center,
                             ),
                         ],

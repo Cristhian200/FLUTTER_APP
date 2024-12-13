@@ -112,21 +112,33 @@ class _CalendarWithReservationsPageState
   }
 
   // Función para manejar la selección de una fecha en el calendario
-  void _onDaySelected(DateTime selectedDay, DateTime focusedDay) {
-    // Manejo de doble clic
-    if (_lastTappedDate != null &&
-        DateTime.now().difference(_lastTappedDate!) < _doubleTapThreshold &&
-        isSameDay(selectedDay, _lastTappedDate!)) {
-      _navigateToPisosPage(); // Navegar a la página de Pisos
-    } else {
-      setState(() {
-        _selectedDay = selectedDay;
-        _focusedDay = focusedDay;
-        _lastTappedDate =
-            selectedDay; // Actualizar la última fecha seleccionada
-      });
-    }
+  // Función para manejar la selección de una fecha en el calendario
+void _onDaySelected(DateTime selectedDay, DateTime focusedDay) {
+  // Bloquear la selección de fechas anteriores a la fecha actual
+  if (selectedDay.isBefore(DateTime.now())) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('No puedes seleccionar ni el día de hoy ni fechas anteriores.'),
+      ),
+    );
+    return; // No permite seleccionar una fecha anterior a hoy
   }
+
+  // Manejo de doble clic
+  if (_lastTappedDate != null &&
+      DateTime.now().difference(_lastTappedDate!) < _doubleTapThreshold &&
+      isSameDay(selectedDay, _lastTappedDate!)) {
+    _navigateToPisosPage(); // Navegar a la página de Pisos
+  } else {
+    setState(() {
+      _selectedDay = selectedDay;
+      _focusedDay = focusedDay;
+      _lastTappedDate =
+          selectedDay; // Actualizar la última fecha seleccionada
+    });
+  }
+}
+
 
   // Navegar a la página de Pisos
   void _navigateToPisosPage() {
@@ -169,7 +181,7 @@ class _CalendarWithReservationsPageState
                 context,
                 MaterialPageRoute(
                     builder: (context) =>
-                        MisReservasPage()), // Navegar a Mis Reservas
+                        const MisReservasPage()), // Navegar a Mis Reservas
               );
             },
           ),
@@ -180,7 +192,7 @@ class _CalendarWithReservationsPageState
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                    builder: (context) => AboutPage()), // Navegar a About
+                    builder: (context) => const AboutPage()), // Navegar a About
               );
             },
           ),
@@ -192,7 +204,7 @@ class _CalendarWithReservationsPageState
               Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(
-                    builder: (context) => LoginPage()), // Navegar a LoginPage
+                    builder: (context) => const LoginPage()), // Navegar a LoginPage
               );
             },
           ),
@@ -260,12 +272,12 @@ class _CalendarWithReservationsPageState
             ),
             const SizedBox(height: 10),
             // Mensaje bajo el calendario
-            Text(
+            const Text(
               'Por favor haz doble tap en la fecha que deseas. Como recordatorio, no debe ser la misma de hoy.',
               style: TextStyle(
-                fontSize: 14,
+                fontSize: 18,
                 fontStyle: FontStyle.italic,
-                color: Colors.grey[700],
+                color: Color.fromARGB(255, 0, 0, 0),
               ),
               textAlign: TextAlign.center,
             ),

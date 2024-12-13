@@ -304,13 +304,12 @@ class EditReservationPage extends StatefulWidget {
 }
 
 class _EditReservationPageState extends State<EditReservationPage> {
-  final TextEditingController _horarioController = TextEditingController();
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   String? _piso;
   String? _aula;
   String? _oldHorario;
-  final List<String> _horariosDisponibles = []; // Lista de horarios disponibles
+  List<String> _horariosDisponibles = []; // Lista de horarios disponibles
   String? _selectedHorario; // Horario seleccionado
 
   // Mapeo de aulas a pisos
@@ -352,10 +351,11 @@ class _EditReservationPageState extends State<EditReservationPage> {
       setState(() {
         _aula = data['aula'];
         _oldHorario = data['horario'];
-        _horarioController.text = _oldHorario ?? '';
+        _selectedHorario = _oldHorario;
 
         // Obtener el piso asociado al aula desde el mapa
         _piso = aulaPisoMap[_aula!] ?? 'piso desconocido';
+        _loadAvailableHorarios();
       });
     } catch (e) {
       print('Error al cargar los datos: $e');
@@ -365,15 +365,54 @@ class _EditReservationPageState extends State<EditReservationPage> {
     }
   }
 
+  // Cargar los horarios disponibles para el aula
+  Future<void> _loadAvailableHorarios() async {
+    try {
+      final aulaDocRef = _firestore
+          .collection('pisos')
+          .doc(_piso!) // Piso seleccionado
+          .collection('horarios')
+          .doc(_aula!); // Aula seleccionada
+
+      final aulaSnapshot = await aulaDocRef.get();
+      if (!aulaSnapshot.exists) {
+        throw Exception('El aula no existe en los horarios.');
+      }
+
+      Map<String, dynamic> horarios =
+          Map<String, dynamic>.from(aulaSnapshot.data()!);
+
+      // Filtrar los horarios disponibles
+      List<String> availableHorarios = [];
+      horarios.forEach((key, value) {
+        if (value == "Disponible") {
+          availableHorarios.add(key); // Agregar el horario disponible
+        }
+      });
+
+      setState(() {
+        _horariosDisponibles =
+            availableHorarios; // Actualizar lista de horarios
+        _selectedHorario = _horariosDisponibles.isNotEmpty
+            ? _horariosDisponibles[0]
+            : null; // Preseleccionar el primer horario disponible
+      });
+    } catch (e) {
+      print('Error al cargar los horarios disponibles: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error al cargar los horarios disponibles: $e')),
+      );
+    }
+  }
+
+  // Función para actualizar la reserva con el nuevo horario seleccionado
   Future<void> _updateReservation() async {
     try {
-      String newHorario = _horarioController.text.trim();
-
-      if (newHorario.isEmpty || !_isValidHorario(newHorario)) {
+      if (_selectedHorario == null ||
+          !_horariosDisponibles.contains(_selectedHorario)) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-              content: Text(
-                  'Por favor ingresa un horario válido (formato: 10:00 - 11:00).')),
+              content: Text('Por favor selecciona un horario válido.')),
         );
         return;
       }
@@ -383,10 +422,10 @@ class _EditReservationPageState extends State<EditReservationPage> {
             'Datos incompletos. No se puede actualizar la reserva.');
       }
 
-      // Referencia al documento del aula en la subcolección `/horarios`
+      // Referencia al documento del aula en la subcolección /horarios
       final aulaDocRef = _firestore
           .collection('pisos')
-          .doc(_piso!) // Uso dinámico del piso
+          .doc(_piso!)
           .collection('horarios')
           .doc(_aula!);
 
@@ -400,24 +439,25 @@ class _EditReservationPageState extends State<EditReservationPage> {
           Map<String, dynamic>.from(aulaSnapshot.data()!);
 
       // Verificar si el nuevo horario ya está ocupado
-      if (horarios.containsKey(newHorario) &&
-          horarios[newHorario] == "Ocupado") {
+      if (horarios.containsKey(_selectedHorario) &&
+          horarios[_selectedHorario] == "Ocupado") {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('El horario seleccionado ya está ocupado.')),
+          const SnackBar(
+              content: Text('El horario seleccionado ya está ocupado.')),
         );
         return;
       }
 
       // Actualizar los horarios
       horarios[_oldHorario!] = "Disponible"; // Liberar el horario antiguo
-      horarios[newHorario] = "Ocupado"; // Ocupamos el nuevo horario
+      horarios[_selectedHorario!] = "Ocupado"; // Ocupamos el nuevo horario
 
       // Actualizar en Firebase
       await aulaDocRef.update(horarios);
 
       // Actualizar la colección de reservas
       await _firestore.collection('reservas').doc(widget.reservationId).update({
-        'horario': newHorario,
+        'horario': _selectedHorario,
       });
 
       // Notificar éxito
@@ -429,6 +469,7 @@ class _EditReservationPageState extends State<EditReservationPage> {
       Navigator.pop(context);
     } catch (e) {
       print('Error al actualizar la reserva: $e');
+      // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('No se pudo actualizar la reserva.')),
       );
@@ -447,18 +488,31 @@ class _EditReservationPageState extends State<EditReservationPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Editar horario para el $_aula en el  $_piso',
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    'Editar horario para el $_aula en el $_piso',
+                    style: const TextStyle(
+                        fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 20),
-                  TextField(
-                    controller: _horarioController,
-                    decoration: const InputDecoration(
-                      labelText: 'Nuevo horario',
-                      hintText: 'Ejemplo: 10:00 - 11:00',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
+                  // Mostrar mensaje si no hay horarios disponibles
+                  _horariosDisponibles.isEmpty
+                      ? const Center(
+                          child: Text('No hay horarios disponibles.',
+                              style: TextStyle(color: Colors.red)))
+                      : DropdownButton<String>(
+                          value: _selectedHorario,
+                          hint: const Text('Selecciona un horario'),
+                          onChanged: (String? newHorario) {
+                            setState(() {
+                              _selectedHorario = newHorario;
+                            });
+                          },
+                          items: _horariosDisponibles.map((String horario) {
+                            return DropdownMenuItem<String>(
+                              value: horario,
+                              child: Text(horario),
+                            );
+                          }).toList(),
+                        ),
                   const SizedBox(height: 20),
                   ElevatedButton(
                     onPressed: _updateReservation,
@@ -468,38 +522,5 @@ class _EditReservationPageState extends State<EditReservationPage> {
               ),
             ),
     );
-  }
-
-  bool _isValidHorario(String text) {
-    // Verificar el formato
-    final regex =
-        RegExp(r'^([0-9]{1,2}):([0-9]{2}) - ([0-9]{1,2}):([0-9]{2})$');
-    final match = regex.firstMatch(text);
-    if (match == null) {
-      return false; // Formato inválido
-    }
-
-    // Extraer las horas y minutos del horario ingresado
-    int startHour = int.parse(match.group(1)!);
-    int startMinute = int.parse(match.group(2)!);
-    int endHour = int.parse(match.group(3)!);
-    int endMinute = int.parse(match.group(4)!);
-
-    // Verificar que los minutos sean 00 (en este caso no se permite 30 ni otros valores)
-    if (startMinute != 0 || endMinute != 0) {
-      return false; // Minutos inválidos
-    }
-
-    // Verificar que las horas estén dentro del rango permitido (7:00 a 13:00)
-    if (startHour < 7 || startHour > 12 || endHour < 8 || endHour > 13) {
-      return false; // Horas fuera de rango
-    }
-
-    // Verificar que el horario sea exactamente de una hora
-    if (endHour - startHour != 1) {
-      return false; // Duración inválida
-    }
-
-    return true; // Horario válido
   }
 }

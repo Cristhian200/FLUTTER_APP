@@ -7,11 +7,20 @@ import 'package:proyectoreservasihc/VisualReserva.dart';
 import 'package:intl/intl.dart';
 import 'package:proyectoreservasihc/LoginPage.dart';
 
-class AulasPage extends StatelessWidget {
+class AulasPage extends StatefulWidget {
   final String pisoId;
   final DateTime selectedDate;
 
-  const AulasPage({super.key, required this.pisoId, required this.selectedDate});
+  const AulasPage(
+      {super.key, required this.pisoId, required this.selectedDate});
+
+  @override
+  _AulasPageState createState() => _AulasPageState();
+}
+
+class _AulasPageState extends State<AulasPage> {
+  final Map<String, bool> _isProcessing =
+      {}; // Estado de carga para cada aula-horario
 
   Future<List<String>> obtenerAulas(String pisoId) async {
     FirebaseFirestore firestore = FirebaseFirestore.instance;
@@ -40,7 +49,58 @@ class AulasPage extends StatelessWidget {
       }
     });
 
-    return horariosDisponibles;
+    // Convertir las claves del mapa a una lista y ordenarlas
+    List<String> horariosOrdenados = horariosDisponibles.keys.toList();
+    horariosOrdenados
+        .sort(); // Esto ordenará los horarios de forma ascendente (por ejemplo, '08:00', '09:00', ...)
+
+    // Crear un nuevo mapa con los horarios ordenados
+    Map<String, String> horariosOrdenadosMap = {};
+    for (String horario in horariosOrdenados) {
+      horariosOrdenadosMap[horario] = horariosDisponibles[horario]!;
+    }
+
+    return horariosOrdenadosMap;
+  }
+
+  Future<void> guardarReservaEnFirestore(
+      String aula, String horario, DateTime fechaSeleccionada) async {
+    FirebaseAuth auth = FirebaseAuth.instance;
+    User? currentUser = auth.currentUser;
+
+    if (currentUser != null) {
+      String userEmail = currentUser.email ?? '';
+
+      // Captura la hora exacta del dispositivo
+      DateTime fechaReservaConHora = DateTime(
+        fechaSeleccionada.year,
+        fechaSeleccionada.month,
+        fechaSeleccionada.day,
+        DateTime.now().hour,
+        DateTime.now().minute,
+        DateTime.now().second,
+      );
+
+      FirebaseFirestore firestore = FirebaseFirestore.instance;
+      await firestore.collection('reservas').add({
+        'usuario': userEmail,
+        'aula': aula,
+        'horario': horario,
+        'fecha_reserva': fechaReservaConHora, // Guarda la fecha y hora exactas
+        'calificacion': null,
+        'comentario': '',
+        'fecha_creacion': FieldValue.serverTimestamp(), // Hora del servidor
+      });
+    }
+  }
+
+  Future<void> guardarReserva(
+      String aula, String horario, DateTime fechaSeleccionada) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setString('selectedAula', aula);
+    await prefs.setString('selectedHorario', horario);
+
+    await guardarReservaEnFirestore(aula, horario, fechaSeleccionada);
   }
 
   Future<void> actualizarEstadoHorario(
@@ -55,112 +115,82 @@ class AulasPage extends StatelessWidget {
     await horarioRef.update({horario: nuevoEstado});
   }
 
-  Future<void> guardarReservaEnFirestore(
-      String aula, String horario, DateTime fechaSeleccionada) async {
-    FirebaseAuth auth = FirebaseAuth.instance;
-    User? currentUser = auth.currentUser;
+  void mostrarDetallesReserva(BuildContext context, String aula, String horario,
+      DateTime fechaSeleccionada) {
+    String fechaReserva = DateFormat('dd/MM/yyyy').format(fechaSeleccionada);
 
-    if (currentUser != null) {
-      String userEmail = currentUser.email ?? '';
-
-      FirebaseFirestore firestore = FirebaseFirestore.instance;
-      await firestore.collection('reservas').add({
-        'usuario': userEmail,
-        'aula': aula,
-        'horario': horario,
-        'fecha_reserva': fechaSeleccionada,
-        'calificacion': null,
-        'comentario': '',
-        'fecha_creacion': FieldValue.serverTimestamp(),
-      });
-    }
-  }
-
-  Future<void> guardarReserva(
-      String aula, String horario, DateTime fechaSeleccionada) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setString('selectedAula', aula);
-    await prefs.setString('selectedHorario', horario);
-
-    await guardarReservaEnFirestore(aula, horario, fechaSeleccionada);
-  }
-
-  void mostrarDetallesReserva(
-    BuildContext context, String aula, String horario, DateTime fechaSeleccionada) {
-  String fechaReserva = DateFormat('dd/MM/yyyy').format(fechaSeleccionada);
-
-  showDialog(
-    context: context,
-    builder: (context) => AlertDialog(
-      title: const Text("Reserva Exitosa"),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Text("Detalles de tu reserva:"),
-          const SizedBox(height: 10),
-          Text("Aula: $aula"),
-          Text("Horario: $horario"),
-          Text("Fecha de reserva: $fechaReserva"),
-          const SizedBox(height: 20),
-          const Text("¿Qué te gustaría hacer ahora?"),
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Reserva Exitosa"),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text("Detalles de tu reserva:"),
+            const SizedBox(height: 10),
+            Text("Aula: $aula"),
+            Text("Horario: $horario"),
+            Text("Fecha de reserva: $fechaReserva"),
+            const SizedBox(height: 20),
+            const Text("¿Qué te gustaría hacer ahora?"),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context); // Cerrar el diálogo
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const CalendarWithReservationsPage(
+                    reservaId: '',
+                  ),
+                ),
+              );
+            },
+            child: const Text("Continuar reservando"),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context); // Cerrar el diálogo
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => const LoginPage()),
+              );
+            },
+            child: const Text("Cerrar sesión"),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context); // Cerrar el diálogo
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) =>
+                      const MisReservasPage(), // Ir a Mis Reservas
+                ),
+              );
+            },
+            child: const Text("Ver mis reservas"),
+          ),
         ],
       ),
-      actions: [
-        TextButton(
-          onPressed: () {
-            Navigator.pop(context); // Cerrar el diálogo
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => CalendarWithReservationsPage(
-                  reservaId: '',
-                ),
-              ),
-            );
-          },
-          child: const Text("Continuar reservando"),
-        ),
-        TextButton(
-          onPressed: () {
-            Navigator.pop(context); // Cerrar el diálogo
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => LoginPage()),
-            );
-          },
-          child: const Text("Cerrar sesión"),
-        ),
-        TextButton(
-          onPressed: () {
-            Navigator.pop(context); // Cerrar el diálogo
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => MisReservasPage(), // Ir a Mis Reservas
-              ),
-            );
-          },
-          child: const Text("Ver mis reservas"),
-        ),
-      ],
-    ),
-  );
-}
-
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'Aulas Disponibles (${DateFormat('dd/MM/yyyy').format(selectedDate)})',
+          'Aulas Disponibles (${DateFormat('dd/MM/yyyy').format(widget.selectedDate)})',
           style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
         backgroundColor: const Color(0xFF1565C0),
       ),
       body: FutureBuilder<List<String>>(
-        future: obtenerAulas(pisoId),
+        future: obtenerAulas(widget.pisoId),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -171,7 +201,8 @@ class AulasPage extends StatelessWidget {
 
           List<String> aulas = snapshot.data ?? [];
           if (aulas.isEmpty) {
-            return const Center(child: Text('No hay aulas disponibles en este piso'));
+            return const Center(
+                child: Text('No hay aulas disponibles en este piso'));
           }
 
           return ListView.builder(
@@ -189,7 +220,7 @@ class AulasPage extends StatelessWidget {
                 ),
                 children: [
                   FutureBuilder<Map<String, String>>(
-                    future: obtenerHorariosDisponibles(pisoId, aulaId),
+                    future: obtenerHorariosDisponibles(widget.pisoId, aulaId),
                     builder: (context, horariosSnapshot) {
                       if (horariosSnapshot.connectionState ==
                           ConnectionState.waiting) {
@@ -219,27 +250,43 @@ class AulasPage extends StatelessWidget {
 
                       return Column(
                         children: horarios.entries.map((entry) {
+                          String uniqueKey = '${aulaId}_${entry.key}';
                           return ListTile(
                             title: Text(
                               'Horario: ${entry.key}',
                               style: const TextStyle(fontSize: 16),
                             ),
                             trailing: ElevatedButton(
-                              onPressed: () async {
-                                await guardarReserva(
-                                    aulaId, entry.key, selectedDate);
-                                await actualizarEstadoHorario(
-                                    pisoId, aulaId, entry.key, 'Ocupado');
-                                mostrarDetallesReserva(
-                                    context, aulaId, entry.key, selectedDate);
-                              },
+                              onPressed: _isProcessing[uniqueKey] == true
+                                  ? null
+                                  : () async {
+                                      setState(() {
+                                        _isProcessing[uniqueKey] = true;
+                                      });
+                                      await guardarReserva(aulaId, entry.key,
+                                          widget.selectedDate);
+                                      await actualizarEstadoHorario(
+                                          widget.pisoId,
+                                          aulaId,
+                                          entry.key,
+                                          'Ocupado');
+                                      mostrarDetallesReserva(context, aulaId,
+                                          entry.key, widget.selectedDate);
+                                      setState(() {
+                                        _isProcessing[uniqueKey] = false;
+                                      });
+                                    },
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: const Color(0xFF1E88E5),
                               ),
-                              child: const Text(
-                                'Reservar',
-                                style: TextStyle(color: Colors.white),
-                              ),
+                              child: _isProcessing[uniqueKey] == true
+                                  ? const CircularProgressIndicator(
+                                      color: Colors.white,
+                                    )
+                                  : const Text(
+                                      'Reservar',
+                                      style: TextStyle(color: Colors.white),
+                                    ),
                             ),
                           );
                         }).toList(),

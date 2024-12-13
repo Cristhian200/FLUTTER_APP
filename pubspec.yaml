@@ -37,6 +37,7 @@ dependencies:
   table_calendar: ^3.0.0  # Agrega la última versión estable de table_calendar
   intl: ^0.18.1  # Añadir esta línea
 
+
   flutter:
     sdk: flutter
 

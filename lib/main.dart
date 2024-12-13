@@ -7,7 +7,7 @@ import 'firebase_options.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -20,7 +20,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: HomePage(),
+      home: const HomePage(),
     );
   }
 }
@@ -75,20 +75,20 @@ class _HomePageState extends State<HomePage>
     if (_selectedIndex == 0) {
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => HomePage()),
+        MaterialPageRoute(builder: (context) => const HomePage()),
       );
     } else if (_selectedIndex == 1) {
       Navigator.push(
         context,
         MaterialPageRoute(
             builder: (context) =>
-                LoginPage()), // Reemplaza con tu página de perfil
+                const LoginPage()), // Reemplaza con tu página de perfil
       );
     } else if (_selectedIndex == 2) {
       Navigator.push(
         context,
         MaterialPageRoute(
-            builder: (context) => CalendarWithReservationsPage(
+            builder: (context) => const CalendarWithReservationsPage(
                   reservaId: '',
                 )), // Pagina para ver reservas hechas
       );
